@@ -18,53 +18,119 @@
 #include <cuda_runtime.h>
 #include "matrix_mul.h"
 #define BLOCK_WIDTH 2
-
+#define BLOCK_X 32
+#define BLOCK_Y 32
+// #define OPTIMIZED 1
+#ifdef OPTIMIZED
 namespace cuda
 {
-  __global__ void matrix_mul_kernel(float *sq_matrix_1, float *sq_matrix_2, float *sq_matrix_result, int sq_dimension)
-  {
-    int col = blockIdx.x * blockDim.x + threadIdx.x;
-    int row = blockIdx.y * blockDim.y + threadIdx.y;
-    
-    for(int k = 0; k < sq_dimension; k++)
-    {	
-	sq_matrix_result[row*sq_dimension + col] += sq_matrix_1[row * sq_dimension + k] * sq_matrix_2[k * sq_dimension + col];
-    }
-  }
-  
-  void matrix_multiplication(float *sq_matrix_1, float *sq_matrix_2, float *sq_matrix_result, unsigned int sq_dimension)
-  {
-    int size = sq_dimension * sq_dimension * sizeof(float);
-    float *sq_matrix_1_d, *sq_matrix_2_d, *sq_matrix_result_d;
-    
-    /***************************************************
-    Step 1: Allocation of memory on device memory  
-    ****************************************************/
-    
-    /* copy sq_matrix_1 and sq_matrix_2 to device memory */
-    cudaMalloc((void**) &sq_matrix_1_d, size);
-    cudaMemcpy(sq_matrix_1_d, sq_matrix_1, size, cudaMemcpyHostToDevice);
-    cudaMalloc((void**) &sq_matrix_2_d, size);
-    cudaMemcpy(sq_matrix_2_d, sq_matrix_2, size, cudaMemcpyHostToDevice);
-    
-    /*allocate sq_matrix_result on host */
-    cudaMalloc((void**) &sq_matrix_result_d, size);
-    
-    /***************************************************
-    Step 2: Invoke kernel 
-    ****************************************************/
-    int blockNum = ceil(sq_dimension * 1.0 / BLOCK_WIDTH);
-    dim3 dimBlock(BLOCK_WIDTH, BLOCK_WIDTH);
-    dim3 dimGrid(blockNum, blockNum);
+    __global__ void matrix_mul_kernel(float *sq_matrix_1, float *sq_matrix_2, float *sq_matrix_result, int sq_dimension){
+        int col = blockIdx.x * blockDim.x + threadIdx.x;
+        int row = blockIdx.y * blockDim.y + threadIdx.y;
+        const unsigned int bx = BLOCK_X, by = BLOCK_Y;
+        const unsigned int tx = threadIdx.x, ty = threadIdx.y;
+        const unsigned int I = blockIdx.x*bx + tx, J = blockIdx.y*by + ty;
+        const unsigned int gx = gridDim.x, gy = gridDim.y;
+        __shared__ float a[BLOCK_X][BLOCK_Y], b[BLOCK_X][BLOCK_Y]; 
 
-    matrix_mul_kernel<<<dimGrid, dimBlock>>>(sq_matrix_1_d, sq_matrix_2_d, sq_matrix_result_d, sq_dimension);
-    
-    /***************************************************
-    Step 3: Transfer result from device to host 
-    ****************************************************/
-    cudaMemcpy(sq_matrix_result, sq_matrix_result_d, size, cudaMemcpyDeviceToHost);
-    cudaFree(sq_matrix_1_d);
-    cudaFree(sq_matrix_2_d);
-    cudaFree(sq_matrix_result_d);
-  }  
+        for(int k = 0; k < sq_dimension; k++){	
+            sq_matrix_result[row*sq_dimension + col] += sq_matrix_1[row * sq_dimension + k] * sq_matrix_2[k * sq_dimension + col];
+        }
+        //reduce
+        unsigned int t = threeadIdx.x;
+        unsigned int N = sq_dimension;
+        int col = blockIdx.x * blockDim.x + threadIdx.x;
+        int row = blockIdx.y * blockDim.y + threadIdx.y;
+        for (unsigned int stride = 1; stride < blockDim.x; stride <<= 1){
+            __syncthreads();
+            if ((t < stride) && (N < col) && (N < row)){
+                //whatever reduction
+                ehh[t] += ehh[t+stride];
+            }
+        }
+    }
+
+    void matrix_multiplication(float *sq_matrix_1, float *sq_matrix_2, float *sq_matrix_result, unsigned int sq_dimension){
+        int size = sq_dimension * sq_dimension * sizeof(float);
+        float *sq_matrix_1_d, *sq_matrix_2_d, *sq_matrix_result_d;
+
+        /***************************************************
+        Step 1: Allocation of memory on device memory  
+        ****************************************************/
+
+        /* copy sq_matrix_1 and sq_matrix_2 to device memory */
+        cudaMalloc((void**) &sq_matrix_1_d, size);
+        cudaMemcpy(sq_matrix_1_d, sq_matrix_1, size, cudaMemcpyHostToDevice);
+        cudaMalloc((void**) &sq_matrix_2_d, size);
+        cudaMemcpy(sq_matrix_2_d, sq_matrix_2, size, cudaMemcpyHostToDevice);
+
+        /*allocate sq_matrix_result on host */
+        cudaMalloc((void**) &sq_matrix_result_d, size);
+
+        /***************************************************
+        Step 2: Invoke kernel 
+        ****************************************************/
+        int blockNum = ceil(sq_dimension * 1.0 / BLOCK_WIDTH);
+        dim3 dimBlock(BLOCK_WIDTH, BLOCK_WIDTH);
+        dim3 dimGrid(blockNum, blockNum);
+
+        matrix_mul_kernel<<<dimGrid, dimBlock>>>(sq_matrix_1_d, sq_matrix_2_d, sq_matrix_result_d, sq_dimension);
+
+        /***************************************************
+        Step 3: Transfer result from device to host 
+        ****************************************************/
+        cudaMemcpy(sq_matrix_result, sq_matrix_result_d, size, cudaMemcpyDeviceToHost);
+        cudaFree(sq_matrix_1_d);
+        cudaFree(sq_matrix_2_d);
+        cudaFree(sq_matrix_result_d);
+    }  
 } // namespace cuda
+
+#else
+namespace cuda
+{
+    __global__ void matrix_mul_kernel(float *sq_matrix_1, float *sq_matrix_2, float *sq_matrix_result, int sq_dimension){
+        int col = blockIdx.x * blockDim.x + threadIdx.x;
+        int row = blockIdx.y * blockDim.y + threadIdx.y;
+
+        for(int k = 0; k < sq_dimension; k++){	
+            sq_matrix_result[row*sq_dimension + col] += sq_matrix_1[row * sq_dimension + k] * sq_matrix_2[k * sq_dimension + col];
+        }
+    }
+
+    void matrix_multiplication(float *sq_matrix_1, float *sq_matrix_2, float *sq_matrix_result, unsigned int sq_dimension){
+        int size = sq_dimension * sq_dimension * sizeof(float);
+        float *sq_matrix_1_d, *sq_matrix_2_d, *sq_matrix_result_d;
+
+        /***************************************************
+        Step 1: Allocation of memory on device memory  
+        ****************************************************/
+
+        /* copy sq_matrix_1 and sq_matrix_2 to device memory */
+        cudaMalloc((void**) &sq_matrix_1_d, size);
+        cudaMemcpy(sq_matrix_1_d, sq_matrix_1, size, cudaMemcpyHostToDevice);
+        cudaMalloc((void**) &sq_matrix_2_d, size);
+        cudaMemcpy(sq_matrix_2_d, sq_matrix_2, size, cudaMemcpyHostToDevice);
+
+        /*allocate sq_matrix_result on host */
+        cudaMalloc((void**) &sq_matrix_result_d, size);
+
+        /***************************************************
+        Step 2: Invoke kernel 
+        ****************************************************/
+        int blockNum = ceil(sq_dimension * 1.0 / BLOCK_WIDTH);
+        dim3 dimBlock(BLOCK_WIDTH, BLOCK_WIDTH);
+        dim3 dimGrid(blockNum, blockNum);
+
+        matrix_mul_kernel<<<dimGrid, dimBlock>>>(sq_matrix_1_d, sq_matrix_2_d, sq_matrix_result_d, sq_dimension);
+
+        /***************************************************
+        Step 3: Transfer result from device to host 
+        ****************************************************/
+        cudaMemcpy(sq_matrix_result, sq_matrix_result_d, size, cudaMemcpyDeviceToHost);
+        cudaFree(sq_matrix_1_d);
+        cudaFree(sq_matrix_2_d);
+        cudaFree(sq_matrix_result_d);
+    }  
+} // namespace cuda
+#endif
