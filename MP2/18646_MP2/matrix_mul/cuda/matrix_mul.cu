@@ -43,6 +43,8 @@ namespace cuda
           float result = 0.0;
           float matrix_1_data = 0.0;
           float matrix_2_data = 0.0;
+          float matrix_1_data_alt = 0.0;
+          float matrix_2_data_alt = 0.0;
           
           extern __shared__ unsigned int sq_1[32 * 32];
           extern __shared__ unsigned int sq_2[32 * 32];
@@ -50,22 +52,57 @@ namespace cuda
           unsigned int * sq_1_idx = (unsigned int *) sq_1;
           unsigned int * sq_2_idx = (unsigned int *) sq_2;
           
+          
 
           
             
-            __syncthreads();
+          // __syncthreads();
+          extern __shared__ unsigned int sq_1_alt[32 * 32];
+          extern __shared__ unsigned int sq_2_alt[32 * 32];
+          
+          unsigned int * sq_1_idx_alt = (unsigned int *) sq_1_alt;
+          unsigned int * sq_2_idx_alt = (unsigned int *) sq_2_alt;
+
+          matrix_1_data = sq_matrix_1[row * sq_dimension];
+          matrix_2_data = sq_matrix_2[sq_dimension + col];
+          // __ssyncthreads();
+
+          int k = 0;
+          for(k = 0; k < sq_dimension-2; k+=2){	
+              //result += sq_1[row * sq_dimension + k] * sq_2[k * sq_dimension + col];
+              //sq_matrix_result[row*sq_dimension + col] += sq_1[row * sq_dimension + k] * sq_2[k * sq_dimension + col];
+            matrix_1_data_alt = sq_matrix_1[row * sq_dimension + k+1];
+            matrix_2_data_alt = sq_matrix_2[(k+1) * sq_dimension + col];
             
-            for(int k = 0; k < sq_dimension; k++){	
-                //result += sq_1[row * sq_dimension + k] * sq_2[k * sq_dimension + col];
-                //sq_matrix_result[row*sq_dimension + col] += sq_1[row * sq_dimension + k] * sq_2[k * sq_dimension + col];
-              matrix_1_data = sq_matrix_1[row * sq_dimension + k];
-              matrix_2_data = sq_matrix_2[k * sq_dimension + col];
-              /*for(int i = 0; i < matrix_2_data; i++) {
-                result += matrix_1_data;
-              }*/
-              result += matrix_1_data * matrix_2_data;
+            /*for(int i = 0; i < matrix_2_data; i++) {
+              result += matrix_1_data;
+            }*/
+            result += matrix_1_data * matrix_2_data;
+            // __syncthreads();
+
+            matrix_1_data = sq_matrix_1[row * sq_dimension + k + 2];
+            matrix_2_data = sq_matrix_2[(k+2) * sq_dimension + col];
+            /*for(int i = 0; i < matrix_2_data; i++) {
+              result += matrix_1_data;
+            }*/
+            result += matrix_1_data_alt * matrix_2_data_alt;
+            // __syncthreads();
+          }
+          if (k < sq_dimension){
+            //preloaded the even one earlier
+            //if even, then need to run a cleanup before double buffering
+            result += matrix_1_data * matrix_2_data;
+            if (sq_dimension%2 ==0){
+              matrix_1_data_alt = sq_matrix_1[row * sq_dimension + k+1];
+              matrix_2_data_alt = sq_matrix_2[(k+1) * sq_dimension + col];
+              // __syncthreads();
+              result += matrix_1_data_alt * matrix_2_data_alt;
+              
             }
-            sq_matrix_result[row*sq_dimension + col] = result;
+
+          }
+          // __syncthreads();
+          sq_matrix_result[row*sq_dimension + col] = result;
         }
     }
 
