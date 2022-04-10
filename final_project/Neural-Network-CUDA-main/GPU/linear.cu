@@ -10,12 +10,14 @@ void linear_forward_gpu(float *inp, float *weights, float *bias, float *out, int
     if ((row < bs) && (col < n_out)){
         ind_out = row*n_out + col;
         out[ind_out] = bias[col];
-
+        ind_inp = row*n_in;
+        ind_weights = col;
         for (int i=0; i<n_in; i++){
-            ind_inp = row*n_in + i;
-            ind_weights = i*n_out + col;
+            
             
             out[ind_out] += inp[ind_inp]*weights[ind_weights];
+            ind_inp +=1;
+            ind_weights += n_out;
         }
     }
 }
@@ -28,12 +30,14 @@ void linear_backward_gpu(float *inp, float *weights, float *out, int bs, int n_i
 
     if ((row < bs) && (col < n_out)){
         ind_out = row*n_out + col;
-
+        ind_inp = row*n_in;
+        ind_weights = col;
         for (int i=0; i<n_in; i++){
-            ind_inp = row*n_in + i;
-            ind_weights = i*n_out + col;
+            
 
             atomicAdd(&inp[ind_inp], weights[ind_weights]*out[ind_out]);
+            ind_inp +=1;
+            ind_weights += n_out;
         }
     }
 }
@@ -47,12 +51,14 @@ void linear_update_gpu(float *inp, float *weights, float *bias, float *out, int 
     if ((row < bs) && (col < n_out)){
         ind_out = row*n_out + col;
         atomicAdd(&bias[col], -lr*out[ind_out]);
-
+        ind_inp = row*n_in;
+        ind_weights = col;
         for (int i=0; i<n_in; i++){
-            ind_inp = row*n_in + i;
-            ind_weights = i*n_out + col;
+            
 
             atomicAdd(&weights[ind_weights], -lr*inp[ind_inp]*out[ind_out]);
+            ind_inp +=1;
+            ind_weights += n_out;
         }
     }
 }
