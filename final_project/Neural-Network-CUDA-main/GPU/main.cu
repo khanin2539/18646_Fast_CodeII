@@ -13,8 +13,8 @@ int main(){
     int n_hidden = n_in/2;
 
     float *inp, *targ;  
-    cudaMallocManaged(&inp, bs*n_in*sizeof(float));
-    cudaMallocManaged(&targ, (bs+1)*sizeof(float));
+    checkCuda(cudaMalloc(&inp, bs*n_in*sizeof(float)));
+    checkCuda(cudaMalloc(&targ, (bs+1)*sizeof(float)));
 
     begin = std::chrono::steady_clock::now();
     read_csv(inp, "../data/x.csv");
@@ -33,6 +33,13 @@ int main(){
     train_gpu(seq, inp, targ, bs, n_in, n_epochs);
     end = std::chrono::steady_clock::now();
     std::cout << "Training time: " << (std::chrono::duration_cast<std::chrono::microseconds>(end-begin).count())/1000000.0f << std::endl;
+    // free internal weights bias
+    lin1.free();
+    lin2.free();
 
+    
+    // free inp and out in main
+    checkCuda(cudaFree(inp));
+    checkCuda(cudaFree(targ));
     return 0;
 }

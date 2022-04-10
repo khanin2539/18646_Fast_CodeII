@@ -1,7 +1,7 @@
 #include "sequential.h"
 #include "../utils/utils.h"
 
-
+// checked
 void sequential_forward_gpu(float *inp, std::vector<Module*> layers, float *out){
     int sz_out;
     float *curr_out;
@@ -11,13 +11,13 @@ void sequential_forward_gpu(float *inp, std::vector<Module*> layers, float *out)
 
         sz_out = layer->sz_out;
 
-        cudaMallocManaged(&curr_out, sz_out*sizeof(float));
+        checkCuda(cudaMalloc(&curr_out, sz_out*sizeof(float)));
         layer->forward(inp, curr_out);
 
         inp = curr_out;
     }
 
-    cudaMallocManaged(&curr_out, sizeof(float));
+    checkCuda(cudaMalloc(&curr_out, sizeof(float)));
     cudaFree(curr_out);
 }
 
