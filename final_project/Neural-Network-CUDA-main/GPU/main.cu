@@ -1,17 +1,17 @@
 #include <chrono>
-
+/*
 #include "linear.h"
 #include "relu.h"
 #include "train.h"
 #include "../data/read_csv.h"
-
+*/
 
 int main(){
     std::chrono::steady_clock::time_point begin, end;
 
     int bs = 100000, n_in = 50, n_epochs = 100;
     int n_hidden = n_in/2;
-
+    /*
     float *inp, *targ;  
     cudaMallocManaged(&inp, bs*n_in*sizeof(float));
     cudaMallocManaged(&targ, (bs+1)*sizeof(float));
@@ -33,6 +33,7 @@ int main(){
     train_gpu(seq, inp, targ, bs, n_in, n_epochs);
     end = std::chrono::steady_clock::now();
     std::cout << "Training time: " << (std::chrono::duration_cast<std::chrono::microseconds>(end-begin).count())/1000000.0f << std::endl;
-
+    */
+    std::cout<<"Finish training time" << std::endl;
     return 0;
 }
