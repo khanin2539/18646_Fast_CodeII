@@ -6,19 +6,22 @@ __global__
 void linear_forward_gpu(float *inp, float *weights, float *bias, float *out, int bs, int n_in, int n_out){
     int row = blockDim.x*blockIdx.x + threadIdx.x, col = blockDim.y*blockIdx.y + threadIdx.y;
     int ind_inp, ind_weights, ind_out;
+    
 
     if ((row < bs) && (col < n_out)){
         ind_out = row*n_out + col;
-        out[ind_out] = bias[col];
+//         out[ind_out] = bias[col];
+        float local_sum = bias[col];
         ind_inp = row*n_in;
         ind_weights = col;
         for (int i=0; i<n_in; i++){
             
             
-            out[ind_out] += inp[ind_inp]*weights[ind_weights];
+            local_sum += inp[ind_inp]*weights[ind_weights];
             ind_inp +=1;
             ind_weights += n_out;
         }
+        out[ind_out] += local_sum;
     }
 }
 
