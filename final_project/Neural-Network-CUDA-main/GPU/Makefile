@@ -40,7 +40,7 @@
 all: neural
 
 DFLAGS      =
-OPTFLAGS    = -g -pg -O2
+OPTFLAGS    = -g -pg -O2 -std=c++11
 INCFLAGS    = -I.
 CFLAGS      = $(OPTFLAGS) $(DFLAGS) $(INCFLAGS)
 NVCCFLAGS   = $(CFLAGS) 
@@ -59,17 +59,28 @@ NVCC        = nvcc
 %.o : %.cu
 	$(NVCC) $(NVCCFLAGS) -o $@ -c $<
 
-CUDA_C_SRC = main.cu read_csv.cpp
+CUDA_C_SRC = main.cu read_csv.cpp utils.cpp
 CUDA_CU_SRC = mse.cu relu.cu linear.cu sequential.cu train.cu
 
 CUDA_C_OBJ = $(CUDA_C_SRC:%.cu=%.o)
 CUDA_CU_OBJ = $(CUDA_CU_SRC:%.cu=%.o)
 
+
+LINEAR_C_SRC = linear_test.cu read_csv.cpp utils.cpp 
+LINEAR_CU_SRC = linear.cu ../CPU/linear_cpu.cpp
+
+LINEAR_C_OBJ = $(LINEAR_C_SRC:%.cu=%.o)
+LINEAR_CU_OBJ = $(LINEAR_CU_SRC:%.cu=%.o)
+
 neural: neural_main
 neural_main: $(CUDA_C_OBJ) $(CUDA_CU_OBJ)
 	$(NVCC) $(LDFLAGS) -o $@ $(CUDA_C_OBJ) $(CUDA_CU_OBJ)
 
+linear: linear_test
+linear_test: $(LINEAR_C_OBJ) $(LINEAR_CU_OBJ)
+	$(NVCC) $(LDFLAGS) -o $@ $(LINEAR_C_OBJ) $(LINEAR_CU_OBJ)
+
 
 #---------------------------------------------------------------------
 clean:
-	rm -rf *.o cuda_main \
+	rm -rf *.o cuda_main linear_test train_test relu_test sequential_test mse_test\
