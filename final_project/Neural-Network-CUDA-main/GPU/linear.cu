@@ -8,8 +8,8 @@ void linear_forward_gpu(float *inp, float *weights, float *bias, float *out, int
     int row = blockDim.x*blockIdx.x + threadIdx.x, col = blockDim.y*blockIdx.y + threadIdx.y;
     int ind_inp, ind_weights, ind_out;
     // N_IN N_HIDDEN followed from main as input layers and hidden layers
-    
-    extern  __shared__ float shared_weight[N_IN][N_HIDDEN];
+    /*
+    extern  __shared__ float shared_weights[N_IN][N_HIDDEN];
     extern  __shared__ float shared_bias[N_HIDDEN];
     // shared weights are good
 
@@ -40,7 +40,7 @@ void linear_forward_gpu(float *inp, float *weights, float *bias, float *out, int
         out[ind_out] += local_sum;
         
     }
-    /*
+    */
     int out_ind = 0;
 
     if ((row < bs) && (col < n_out)){
@@ -58,7 +58,7 @@ void linear_forward_gpu(float *inp, float *weights, float *bias, float *out, int
         out[ind_out] = out_ind;
     }
 
-    */
+    
 }
 
 
