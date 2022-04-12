@@ -3,6 +3,7 @@
 #include "linear.h"
 #include "relu.h"
 #include "train.h"
+#include "def.h"
 #include "../data/read_csv.h"
 
 
