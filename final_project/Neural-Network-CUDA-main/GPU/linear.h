@@ -4,8 +4,6 @@
 
 #include "../utils/module.h"
 
-#define N_IN 50
-#define N_HIDDEN N_IN/2
 
 class Linear_GPU: public Module{
     public:
