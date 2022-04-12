@@ -9,8 +9,8 @@
 int main(){
     std::chrono::steady_clock::time_point begin, end;
 
-    int bs = 100000, n_in = 50, n_epochs = 100;
-    int n_hidden = n_in/2;
+    int bs = 100000, n_in = N_IN, n_epochs = 100;
+    int n_hidden = N_HIDDEN;
 
     float *inp, *targ;  
     cudaMallocManaged(&inp, bs*n_in*sizeof(float));
