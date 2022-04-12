@@ -7,6 +7,8 @@ __global__
 void linear_forward_gpu(float *inp, float *weights, float *bias, float *out, int bs, int n_in, int n_out){
     int row = blockDim.x*blockIdx.x + threadIdx.x, col = blockDim.y*blockIdx.y + threadIdx.y;
     int ind_inp, ind_weights, ind_out;
+    // N_IN N_HIDDEN followed from main as input layers and hidden layers
+    
     extern  __shared__ float shared_weight[N_IN][N_HIDDEN];
     extern  __shared__ float shared_bias[N_HIDDEN];
     // shared weights are good
