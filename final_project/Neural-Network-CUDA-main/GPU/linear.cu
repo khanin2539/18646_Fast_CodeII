@@ -41,15 +41,15 @@ void linear_forward_gpu(float *inp, float *weights, float *bias, float *out, int
         
     }
     */
-    int out_ind = 0;
+    float out_ind;
 
     if ((row < bs) && (col < n_out)){
         ind_out = row*n_out + col;
         out_ind = bias[col];
+        out[ind_out] = bias[col];
         ind_inp = row*n_in;
         ind_weights = col;
         for (int i=0; i<n_in; i++){
-            
             
             out_ind += inp[ind_inp]*weights[ind_weights];
             ind_inp +=1;
@@ -57,6 +57,8 @@ void linear_forward_gpu(float *inp, float *weights, float *bias, float *out, int
         }
         out[ind_out] = out_ind;
     }
+
+    
     
 }
 
