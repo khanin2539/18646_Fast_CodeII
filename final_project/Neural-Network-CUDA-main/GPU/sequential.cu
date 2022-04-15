@@ -11,13 +11,13 @@ void sequential_forward_gpu(float *inp, std::vector<Module*> layers, float *out)
 
         sz_out = layer->sz_out;
 
-        cudaMallocManaged(&curr_out, sz_out*sizeof(float));
+       cudaMalloc(&curr_out, sz_out*sizeof(float));
         layer->forward(inp, curr_out);
 
         inp = curr_out;
     }
 
-    cudaMallocManaged(&curr_out, sizeof(float));
+    cudaMalloc(&curr_out, sizeof(float));
     cudaFree(curr_out);
 }
 
