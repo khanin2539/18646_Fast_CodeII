@@ -59,18 +59,51 @@ NVCC        = nvcc
 %.o : %.cu
 	$(NVCC) $(NVCCFLAGS) -o $@ -c $<
 
-CUDA_C_SRC = main.cu read_csv.cpp utils.cpp
-CUDA_CU_SRC = mse.cu relu.cu linear.cu sequential.cu train.cu
+CUDA_C_SRC =
+CUDA_CU_SRC = main.cpp ../data/read_csv.cpp ../utils/utils.cpp mse_cpu.cpp relu_cpu.cpp linear_cpu.cpp sequential_cpu.cpp train_cpu.cpp
 
 CUDA_C_OBJ = $(CUDA_C_SRC:%.cu=%.o)
 CUDA_CU_OBJ = $(CUDA_CU_SRC:%.cu=%.o)
 
 
-LINEAR_C_SRC =  linear.cu linear_test.cu read_csv.cpp utils.cpp ../CPU/linear_cpu.cpp
-LINEAR_CU_SRC =  
+LINEAR_C_SRC =   ../data/read_csv.cpp ../utils/utils.cpp mse_cpu.cpp relu_cpu.cpp linear_cpu.cpp sequential_cpu.cpp train_cpu.cpp
+
+LINEAR_CU_SRC =  ../test/linear_test.cu ../GPU/linear.cu 
 
 LINEAR_C_OBJ = $(LINEAR_C_SRC:%.cu=%.o)
 LINEAR_CU_OBJ = $(LINEAR_CU_SRC:%.cu=%.o)
+
+
+MSE_C_SRC =   ../data/read_csv.cpp ../utils/utils.cpp mse_cpu.cpp relu_cpu.cpp linear_cpu.cpp sequential_cpu.cpp train_cpu.cpp
+
+MSE_CU_SRC =  ../test/mse_test.cu ../GPU/mse.cu 
+
+MSE_C_OBJ = $(MSE_C_SRC:%.cu=%.o)
+MSE_CU_OBJ = $(MSE_CU_SRC:%.cu=%.o)
+
+
+RELU_C_SRC =   ../data/read_csv.cpp ../utils/utils.cpp mse_cpu.cpp relu_cpu.cpp linear_cpu.cpp sequential_cpu.cpp train_cpu.cpp
+
+RELU_CU_SRC =  ../test/relu_test.cu ../GPU/relu.cu 
+
+RELU_C_OBJ = $(RELU_C_SRC:%.cu=%.o)
+RELU_CU_OBJ = $(RELU_CU_SRC:%.cu=%.o)
+
+
+SEQ_C_SRC =   ../data/read_csv.cpp ../utils/utils.cpp mse_cpu.cpp relu_cpu.cpp linear_cpu.cpp sequential_cpu.cpp train_cpu.cpp
+
+SEQ_CU_SRC =  ../test/sequential_test.cu ../GPU/sequential.cu  ../OLD_GPU/linear.cu  ../OLD_GPU/relu.cu 
+
+SEQ_C_OBJ = $(SEQ_C_SRC:%.cu=%.o)
+SEQ_CU_OBJ = $(SEQ_CU_SRC:%.cu=%.o)
+
+
+TRAIN_C_SRC =   ../data/read_csv.cpp ../utils/utils.cpp mse_cpu.cpp relu_cpu.cpp linear_cpu.cpp sequential_cpu.cpp train_cpu.cpp
+
+TRAIN_CU_SRC =  ../test/sequential_test.cu ../GPU/train.cu  ../OLD_GPU/mse.cu  ../OLD_GPU/sequential.cu  ../OLD_GPU/linear.cu  ../OLD_GPU/relu.cu
+
+TRAIN_C_OBJ = $(TRAIN_C_SRC:%.cu=%.o)
+TRAIN_CU_OBJ = $(TRAIN_CU_SRC:%.cu=%.o)
 
 neural: neural_main
 neural_main: $(CUDA_C_OBJ) $(CUDA_CU_OBJ)
@@ -80,7 +113,22 @@ linear: test_linear
 test_linear: $(LINEAR_C_OBJ) $(LINEAR_CU_OBJ)
 	$(NVCC) $(LDFLAGS) -o $@ $(LINEAR_C_OBJ) $(LINEAR_CU_OBJ)
 
+mse: test_mse
+test_mse: $(MSE_C_OBJ) $(MSE_CU_OBJ)
+	$(NVCC) $(LDFLAGS) -o $@ $(MSE_C_OBJ) $(MSE_CU_OBJ)
+
+relu: test_relu
+test_relu: $(RELU_C_OBJ) $(RELU_CU_OBJ)
+	$(NVCC) $(LDFLAGS) -o $@ $(RELU_C_OBJ) $(RELU_CU_OBJ)
+
+seq: test_seq
+test_seq: $(SEQ_C_OBJ) $(SEQ_CU_OBJ)
+	$(NVCC) $(LDFLAGS) -o $@ $(SEQ_C_OBJ) $(SEQ_CU_OBJ)
+
+train: test_train
+test_train: $(TRAIN_C_OBJ) $(TRAIN_CU_OBJ)
+	$(NVCC) $(LDFLAGS) -o $@ $(TRAIN_C_OBJ) $(TRAIN_CU_OBJ)
 
 #---------------------------------------------------------------------
 clean:
-	rm -rf *.o neural_main test_linear train_test relu_test sequential_test mse_test gmon.out\
+	rm -rf *.o ../GPU/*.o ../OLD_GPU/*.o ../test/*.o neural_main test_linear train_test relu_test sequential_test test_mse gmon.out\
