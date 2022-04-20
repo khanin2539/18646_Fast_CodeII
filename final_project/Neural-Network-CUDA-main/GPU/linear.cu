@@ -26,18 +26,18 @@ void linear_forward_gpu(float *inp, float *weights, float *bias, float *out, int
     __syncthreads();
     if ((row < bs) && (col < n_out)){
         ind_out = row*n_out + col;
-        // out[ind_out] = bias[col];
-        float local_sum = shared_bias[col];
-        
+        out[ind_out] = bias[col];
+        // float local_sum = shared_bias[col];
+        ind_inp = row*n_in;
+        ind_weights = col;
         for (int i=0; i<n_in; i++){
-            ind_inp = row*n_in+i;
-            ind_weights = col+n_out*i;
             
-            local_sum += inp[ind_inp]*shared_weights[ind_weights];
-            // ind_inp +=1;
-            // ind_weights += n_out;
+            
+            out[ind_out] += inp[ind_inp]*shared_weights[ind_weights];
+            ind_inp +=1;
+            ind_weights += n_out;
         }
-        out[ind_out] += local_sum;
+        // out[ind_out] += local_sum;
         
     }
     
