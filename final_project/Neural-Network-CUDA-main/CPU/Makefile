@@ -131,4 +131,4 @@ test_train: $(TRAIN_C_OBJ) $(TRAIN_CU_OBJ)
 
 #---------------------------------------------------------------------
 clean:
-	rm -rf *.o ../GPU/*.o ../OLD_GPU/*.o ../test/*.o neural_main test_linear train_test relu_test sequential_test test_mse gmon.out\
+	rm -rf *.o ../GPU/*.o ../OLD_GPU/*.o ../test/*.o neural_main test_linear train_test relu_test sequential_test test_mse test_relu test_seq test_train gmon.out\

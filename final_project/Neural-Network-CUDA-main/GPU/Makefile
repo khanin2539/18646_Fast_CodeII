@@ -59,14 +59,14 @@ NVCC        = nvcc
 %.o : %.cu
 	$(NVCC) $(NVCCFLAGS) -o $@ -c $<
 
-CUDA_C_SRC = main.cu read_csv.cpp utils.cpp
+CUDA_C_SRC = main.cu ../data/read_csv.cpp utils.cpp
 CUDA_CU_SRC = mse.cu relu.cu linear.cu sequential.cu train.cu
 
 CUDA_C_OBJ = $(CUDA_C_SRC:%.cu=%.o)
 CUDA_CU_OBJ = $(CUDA_CU_SRC:%.cu=%.o)
 
 
-LINEAR_C_SRC =  linear.cu linear_test.cu read_csv.cpp utils.cpp ../CPU/linear_cpu.cpp
+LINEAR_C_SRC =  linear.cu linear_test.cu ../data/read_csv.cpp utils.cpp ../CPU/linear_cpu.cpp
 LINEAR_CU_SRC =  
 
 LINEAR_C_OBJ = $(LINEAR_C_SRC:%.cu=%.o)
