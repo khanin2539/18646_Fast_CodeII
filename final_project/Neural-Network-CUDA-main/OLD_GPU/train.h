@@ -5,7 +5,7 @@
 #include "../OLD_GPU/sequential.h"
 
 
-void train_oldgpu(Sequential_OLDGPU seq, float *inp, float *targ, int bs, int n_in, int n_epochs);
+void train_gpu(Sequential_GPU seq, float *inp, float *targ, int bs, int n_in, int n_epochs);
 
 
 #endif

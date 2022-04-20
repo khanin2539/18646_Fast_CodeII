@@ -3,6 +3,8 @@
 #include "../OLD_GPU/linear.h"
 #include "../OLD_GPU/relu.h"
 #include "../OLD_GPU/train.h"
+#include "../OLD_GPU/mse.h"
+#include "../OLD_GPU/sequential.h"
 #include "../data/read_csv.h"
 
 
