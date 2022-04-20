@@ -9,37 +9,37 @@ void linear_forward_gpu(float *inp, float *weights, float *bias, float *out, int
     int ind_inp, ind_weights, ind_out;
     // N_IN N_HIDDEN followed from main as input layers and hidden layers
     
-    extern  __shared__ float shared_weights[N_IN*N_IN];
-    extern  __shared__ float shared_bias[N_HIDDEN];
+    // extern  __shared__ float shared_weights[N_IN*N_IN];
+    // extern  __shared__ float shared_bias[N_HIDDEN];
     // shared weights are good
 
-    if ((row < bs) && (col < n_out)){
-        //update shared mem 
-        for(int i = threadIdx.x; i <n_in*n_out; i += blockDim.x){
+    // if ((row < bs) && (col < n_out)){
+    //     //update shared mem 
+    //     for(int i = threadIdx.x; i <n_in*n_out; i += blockDim.x){
             
-            shared_weights[i] = weights[i];
+    //         shared_weights[i] = weights[i];
             
-        }
+    //     }
             
-    }
-    if (threadIdx.x == 0 && threadIdx.y == 0) for (int i = 0; i < n_out; i++) shared_bias[i] = bias[i];
-    __syncthreads();
-    if ((row < bs) && (col < n_out)){
-        ind_out = row*n_out + col;
-        out[ind_out] = bias[col];
-        // float local_sum = shared_bias[col];
-        ind_inp = row*n_in;
-        ind_weights = col;
-        for (int i=0; i<n_in; i++){
+    // }
+    // if (threadIdx.x == 0 && threadIdx.y == 0) for (int i = 0; i < n_out; i++) shared_bias[i] = bias[i];
+    // __syncthreads();
+    // if ((row < bs) && (col < n_out)){
+    //     ind_out = row*n_out + col;
+    //     // out[ind_out] = bias[col];
+    //     float local_sum = shared_bias[col];
+    //     ind_inp = row*n_in;
+    //     ind_weights = col;
+    //     for (int i=0; i<n_in; i++){
             
             
-            out[ind_out] += inp[ind_inp]*shared_weights[ind_weights];
-            ind_inp +=1;
-            ind_weights += n_out;
-        }
-        // out[ind_out] += local_sum;
+    //         local_sum += inp[ind_inp]*shared_weights[ind_weights];
+    //         ind_inp +=1;
+    //         ind_weights += n_out;
+    //     }
+    //     out[ind_out] += local_sum;
         
-    }
+    // }
     
     // float out_ind;
 
@@ -57,6 +57,22 @@ void linear_forward_gpu(float *inp, float *weights, float *bias, float *out, int
     //     }
     //     out[ind_out] = out_ind;
     // }
+    if ((row < bs) && (col < n_out)){
+        ind_out = row*n_out + col;
+        // out[ind_out] = bias[col];
+        float local_sum = bias[col];
+        ind_inp = row*n_in;
+        ind_weights = col;
+        for (int i=0; i<n_in; i++){
+            
+            
+            local_sum += inp[ind_inp]*weights[ind_weights];
+            ind_inp +=1;
+            ind_weights += n_out;
+        }
+        out[ind_out] += local_sum;
+        
+    }
 
     
     
