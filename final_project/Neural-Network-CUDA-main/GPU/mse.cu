@@ -24,7 +24,7 @@ void mse_backward_gpu(float *inp, float *out, int sz_out){
 MSE_GPU::MSE_GPU(int _sz_out){
     sz_out = _sz_out;
     
-    n_blocks = (sz_out + block_size - 1) / block_size;
+    n_blocks = (sz_out + 1024 - 1) / 1024;
 }
 
 
@@ -37,12 +37,12 @@ void MSE_GPU::forward(float *_inp, float *_out){
 void MSE_GPU::_forward(float *_inp, float *_out){
     _out[sz_out] = 0.0f;
     
-    mse_forward_gpu<<<n_blocks, block_size>>>(_inp, _out, sz_out);
+    mse_forward_gpu<<<n_blocks, 1024>>>(_inp, _out, sz_out);
     cudaDeviceSynchronize();
 }
 
 
 void MSE_GPU::backward(){
-    mse_backward_gpu<<<n_blocks, block_size>>>(inp, out, sz_out);
+    mse_backward_gpu<<<n_blocks, 1024>>>(inp, out, sz_out);
     cudaDeviceSynchronize();
 }

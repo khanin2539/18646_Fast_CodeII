@@ -128,8 +128,8 @@ Linear_GPU::Linear_GPU(int _bs, int _n_in, int _n_out, float _lr){
 
     sz_weights = n_in*n_out;
     sz_out = bs*n_out;
-    n_block_rows = (bs + block_size - 1) / block_size;
-    n_block_cols = (n_out + block_size - 1) / block_size;
+    n_block_rows = (bs + 1024 - 1) / 1024;
+    n_block_cols = (n_out + 1024 - 1) / 1024;
 
     cudaMallocManaged(&weights, sz_weights*sizeof(float));
     cudaMallocManaged(&bias, n_out*sizeof(float));
@@ -144,7 +144,7 @@ void Linear_GPU::forward(float *_inp, float *_out){
     out = _out;
 
     dim3 n_blocks(n_block_rows, n_block_cols);
-    dim3 n_threads(block_size, block_size);
+    dim3 n_threads(1024, 1024);
 
     linear_forward_gpu<<<n_blocks, n_threads>>>(inp, weights, bias, out, bs, n_in, n_out);
     cudaDeviceSynchronize();
@@ -155,7 +155,7 @@ void Linear_GPU::backward(){
     init_zero(inp, bs*n_in);
 
     dim3 n_blocks(n_block_rows, n_block_cols);
-    dim3 n_threads(block_size, block_size);
+    dim3 n_threads(1024, 1024);
 
     linear_backward_gpu<<<n_blocks, n_threads>>>(inp, cp_weights, out, bs, n_in, n_out);
     cudaDeviceSynchronize();
@@ -169,7 +169,7 @@ void Linear_GPU::update(){
     set_eq(cp_weights, weights, sz_weights);
 
     dim3 n_blocks(n_block_rows, n_block_cols);
-    dim3 n_threads(block_size, block_size);
+    dim3 n_threads(1024, 1024);
     
     linear_update_gpu<<<n_blocks, n_threads>>>(inp, weights, bias, out, bs, n_in, n_out, lr);
     cudaDeviceSynchronize();

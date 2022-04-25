@@ -24,7 +24,7 @@ void relu_backward_gpu(float *inp, float *out, int sz_out){
 ReLU_GPU::ReLU_GPU(int _sz_out){
     sz_out = _sz_out;
     
-    n_blocks = (sz_out + block_size - 1) / block_size;
+    n_blocks = (sz_out + 1024 - 1) / 1024;
 }
 
 
@@ -32,12 +32,12 @@ void ReLU_GPU::forward(float *_inp, float *_out){
     inp = _inp;
     out = _out;
 
-    relu_forward_gpu<<<n_blocks, block_size>>>(inp, out, sz_out);
+    relu_forward_gpu<<<n_blocks, 1024>>>(inp, out, sz_out);
     cudaDeviceSynchronize();
 }
 
 
 void ReLU_GPU::backward(){    
-    relu_backward_gpu<<<n_blocks, block_size>>>(inp, out, sz_out);
+    relu_backward_gpu<<<n_blocks, 1024>>>(inp, out, sz_out);
     cudaDeviceSynchronize();
 }
